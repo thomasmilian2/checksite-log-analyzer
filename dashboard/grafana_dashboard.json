@@ -1,5 +1,23 @@
 {
   "dashboard": {
+    "templating": {
+      "list": [
+        {
+          "name": "hostname",
+          "type": "query",
+          "datasource": "MySQL",
+          "refresh": 1,
+          "definition": "SELECT DISTINCT hostname FROM http_status",
+          "query": "SELECT DISTINCT hostname FROM http_status",
+          "multi": true,
+          "includeAll": true,
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          }
+        }
+      ]
+    },
     "id": null,
     "uid": "checksite-status",
     "title": "Checksite - HTTP Status e Errori",
@@ -10,7 +28,7 @@
         "title": "HTTP 200 nel tempo",
         "targets": [
           {
-            "rawSql": "SELECT log_date AS \"time\", SUM(count) AS \"HTTP 200\" FROM http_status WHERE status_code = 200 GROUP BY log_date ORDER BY log_date",
+            "rawSql": "SELECT log_date AS \"time\", SUM(count) AS \"HTTP 200\" FROM http_status WHERE hostname IN($hostname) AND status_code = 200 GROUP BY hostname,  log_date ORDER BY log_date",
             "refId": "A",
             "format": "time_series"
           }
@@ -22,7 +40,7 @@
         "title": "Errori nel tempo",
         "targets": [
           {
-            "rawSql": "SELECT log_date AS \"time\", COUNT(*) AS \"Errori\" FROM page_errors GROUP BY log_date ORDER BY log_date",
+            "rawSql": "SELECT log_date AS \"time\", COUNT(*) AS \"Errori\" FROM page_errors GROUP BY hostname,  log_date ORDER BY log_date",
             "refId": "B",
             "format": "time_series"
           }
@@ -34,7 +52,7 @@
         "title": "Top URL in errore",
         "targets": [
           {
-            "rawSql": "SELECT url, COUNT(*) AS totale FROM page_errors GROUP BY url ORDER BY totale DESC LIMIT 10",
+            "rawSql": "SELECT url, COUNT(*) AS totale FROM page_errors GROUP BY hostname,  url ORDER BY totale DESC LIMIT 10",
             "refId": "C"
           }
         ],
@@ -45,7 +63,7 @@
         "title": "Distribuzione per tipo di errore",
         "targets": [
           {
-            "rawSql": "SELECT error_type, COUNT(*) AS totale FROM page_errors GROUP BY error_type ORDER BY totale DESC",
+            "rawSql": "SELECT error_type, COUNT(*) AS totale FROM page_errors GROUP BY hostname,  error_type ORDER BY totale DESC",
             "refId": "D"
           }
         ],

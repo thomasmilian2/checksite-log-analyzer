@@ -1,12 +1,13 @@
+version: '3.8'
+
 services:
   mariadb:
     image: mariadb:11
     container_name: mariadb-checksite
+    env_file:
+      - .env
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: checksite_logs
-      MYSQL_USER: checksite
-      MYSQL_PASSWORD: checksitepass
     volumes:
       - mariadb_data:/var/lib/mysql
     ports:
@@ -20,9 +21,11 @@ services:
       - mariadb
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
     volumes:
       - grafana_data:/var/lib/grafana
     restart: unless-stopped

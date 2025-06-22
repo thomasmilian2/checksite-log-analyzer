@@ -1,108 +1,118 @@
-# checksite-log-analyzer
 # 📊 Checksite Log Analyzer
 
-Sistema modulare e leggero per analizzare e visualizzare i log del progetto `checksite` da più nodi (`impr01c01`, `impr02c01`, `impr03c01`) usando:
+Sistema di analisi centralizzato per i log del progetto `checksite`, con stack leggero basato su:
 
-- **MariaDB** per lo storage dei log
-- **Python** per il parsing e l'inserimento
-- **Grafana** per la visualizzazione
+- MariaDB
+- Python
+- Grafana
 
 ---
 
 ## 🚀 Avvio rapido
 
-1. **Clona o scarica il progetto**
+Assicurati di avere Docker e Docker Compose installati, poi esegui:
 
-2. **Avvia i container**
 ```bash
 docker compose up -d
 ```
 
-3. **Importa lo schema SQL**
-```bash
-docker exec -i mariadb-checksite mysql -uchecksite -pchecksitepass checksite_logs < sql/schema.sql
+---
+
+## 📂 Struttura
+
+```
+checksite-log-analyzer/
+├── config/                 # Configurazione DB
+│   └── db_config.py
+├── dashboard/              # Dashboard Grafana JSON
+│   └── grafana_dashboard.json
+├── logs/                   # Inserisci qui i log da elaborare
+├── main.py                 # Script principale per analizzare i log
+├── load_all_logs.py        # Script per caricare tutti i log da una cartella
+├── requirements.txt        # Dipendenze Python
+├── .env                    # Credenziali sicure
+└── docker-compose.yml      # Stack con MariaDB e Grafana
 ```
 
-4. **Installa le dipendenze Python**
+---
+
+## 🔐 Configurazione sicura
+
+Nel file `.env` puoi specificare le credenziali di accesso al database e a Grafana:
+
+```dotenv
+DB_HOST=mariadb
+DB_NAME=checksite_logs
+DB_USER=checksite
+DB_PASSWORD=checksitepass
+
+GRAFANA_USER=admin
+GRAFANA_PASSWORD=admin
+```
+
+---
+
+## 📥 Caricamento log
+
+Puoi caricare un singolo file di log così:
+
+```bash
+python main.py logs/impr01c01-2025-06-13.log
+```
+
+Oppure tutti i log nella cartella `logs/`:
+
+```bash
+python load_all_logs.py logs/
+```
+
+⚠️ I file devono essere nominati con il pattern `hostname-data.log`, es:
+```
+impr01c01-2025-06-13.log
+```
+
+---
+
+## 📊 Dashboard Grafana
+
+- Accesso: [http://localhost:3000](http://localhost:3000)
+- Login: usa le credenziali in `.env`
+- Importa `dashboard/grafana_dashboard.json`
+- Puoi filtrare per `hostname` in alto
+
+---
+
+## 🧩 Modulare
+
+Puoi estendere facilmente:
+
+- Nuovi tipi di errori → modifica `parse_error_line()` in `main.py`
+- Altri status code → modifica `parse_status_line()`
+- Nuove fonti log → modifica `load_all_logs.py`
+
+---
+
+## ✅ Esempi supportati
+
+Esempi di log validi:
+
+```log
+[2025-06-13T17:35:12.000000] ✅ https://example.com - Status: 200
+[2025-06-13T17:35:13.000000] ❌ https://example.com/errore - Errore: Page.goto: Timeout 60000ms exceeded.
+```
+
+---
+
+## 📦 Installazione dipendenze Python (solo se non usi Docker)
+
 ```bash
 pip install -r requirements.txt
 ```
 
-5. **Esegui l'import di un file log**
-```bash
-# Esempio con hostname nel nome file
-python main.py /root/Automation/checksite/logs/impr01c01-2025-06-13.log
-```
-
 ---
 
-## 🗃️ Struttura
+## ✨ Contribuzioni
 
-```
-checksite-log-analyzer/
-├── config/                  # Configurazione DB
-├── parser/                  # Parser dei log
-├── sql/                     # Schema MariaDB
-├── dashboard/               # Dashboard JSON per Grafana
-├── utils/                   # Utility comuni
-├── main.py                  # Script principale
-├── requirements.txt         # Dipendenze Python
-└── docker-compose.yml       # Stack Grafana + MariaDB
-```
+Per aggiungere nuovi tipi di errore o metriche, lavora su `main.py` e aggiorna le query Grafana nel file `grafana_dashboard.json`.
 
 ---
-
-## 🧠 Come funziona
-
-- `main.py` identifica automaticamente il nodo (`hostname`) in base al nome file
-- Se il file termina in `.json.log`, viene considerato un log di status HTTP
-- Altrimenti, viene analizzato come log di errori testuali (es. `timeout`, `proxy_failed`...)
-
----
-
-## 🧪 Esempio output in Grafana
-
-- Andamento degli `HTTP 200` nel tempo
-- Conteggio degli errori totali per giorno/ora
-- URL più frequentemente in errore
-- Classificazione per tipo di errore
-
-Login:
-- **URL**: http://localhost:3000
-- **User**: `admin` / `admin`
-
-Importa la dashboard da: `dashboard/grafana_dashboard.json`
-
----
-
-## ⚙️ Variabili modificabili
-
-- `config/db_config.py`: accesso DB
-- `parser/error_parser.py`: nuove firme di errore in `classify_error()`
-- `parser/status_parser.py`: parsing log JSON
-
----
-
-## 🔄 Naming file log
-
-Per identificare correttamente il nodo, il nome file deve essere nel formato:
-
-```
-impr01c01-2025-06-13.log
-impr02c01-2025-06-13.json.log
-```
-
----
-
-## 🛠️ To-do futuri
-
-- Supporto a parametri CLI tipo `--host`
-- Analisi automatica directory log
-- Scheduler o crontab
-- API REST per invio log da remoto
-
----
-
-## 👨‍💻 Autore
-
-Massimiliano Bendotti – progetto `checksite` su 3 nodi Debian 12
