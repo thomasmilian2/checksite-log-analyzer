@@ -1,0 +1,61 @@
+✅ Query per visualizzare l'andamento degli errori nel tempo (da page_errors):
+SELECT
+  log_date AS "time",
+  error_type,
+  COUNT(*) AS total
+FROM page_errors
+GROUP BY log_date, error_type
+ORDER BY log_date ASC;
+
+✅ Query per contare solo gli errori 408 (Timeout):
+SELECT
+  log_date AS "time",
+  status_code,
+  SUM(count) AS total
+FROM http_status
+WHERE status_code = 408
+GROUP BY log_date, status_code
+ORDER BY log_date ASC;
+
+
+✅ Query per visualizzare l'andamento di tutti gli http_status (incluso 200):
+SELECT
+  log_date AS "time",
+  status_code,
+  SUM(count) AS total
+FROM http_status
+GROUP BY log_date, status_code
+ORDER BY log_date ASC;
+
+
+✅ Query per visualizzare solo i codici http_status diversi da 200:
+SELECT
+  log_date AS "time",
+  status_code,
+  SUM(count) AS total
+FROM http_status
+WHERE status_code != 200
+GROUP BY log_date, status_code
+ORDER BY log_date ASC;
+
+
+✅ Query SQL per status 200 nel tempo (aggregato per ora):
+SELECT
+  UNIX_TIMESTAMP(DATE_FORMAT(log_date, '%Y-%m-%d %H:00:00')) * 1000 AS time,
+  COUNT(*) AS total
+FROM http_status
+WHERE status_code = 200
+  AND $__timeFilter(log_date)
+GROUP BY time
+ORDER BY time ASC;
+
+
+✅ Oppure per intervalli da 5 minuti (bucket da 300 secondi):
+SELECT
+  UNIX_TIMESTAMP(DATE_FORMAT(log_date, '%Y-%m-%d %H:%i:00')) DIV 300 * 300000 AS time,
+  COUNT(*) AS total
+FROM http_status
+WHERE status_code = 200
+  AND $__timeFilter(log_date)
+GROUP BY time
+ORDER BY time;
