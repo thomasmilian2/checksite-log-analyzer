@@ -1,0 +1,32 @@
+services:
+  mariadb:
+    image: mariadb:11
+    container_name: mariadb-checksite
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: checksite_logs
+      MYSQL_USER: checksite
+      MYSQL_PASSWORD: checksitepass
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: grafana-checksite
+    depends_on:
+      - mariadb
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+
+volumes:
+  mariadb_data:
+  grafana_data:

@@ -1,0 +1,58 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "checksite-status",
+    "title": "Checksite - HTTP Status e Errori",
+    "timezone": "browser",
+    "panels": [
+      {
+        "type": "graph",
+        "title": "HTTP 200 nel tempo",
+        "targets": [
+          {
+            "rawSql": "SELECT log_date AS \"time\", SUM(count) AS \"HTTP 200\" FROM http_status WHERE status_code = 200 GROUP BY log_date ORDER BY log_date",
+            "refId": "A",
+            "format": "time_series"
+          }
+        ],
+        "gridPos": { "x": 0, "y": 0, "w": 24, "h": 9 }
+      },
+      {
+        "type": "graph",
+        "title": "Errori nel tempo",
+        "targets": [
+          {
+            "rawSql": "SELECT log_date AS \"time\", COUNT(*) AS \"Errori\" FROM page_errors GROUP BY log_date ORDER BY log_date",
+            "refId": "B",
+            "format": "time_series"
+          }
+        ],
+        "gridPos": { "x": 0, "y": 10, "w": 24, "h": 9 }
+      },
+      {
+        "type": "table",
+        "title": "Top URL in errore",
+        "targets": [
+          {
+            "rawSql": "SELECT url, COUNT(*) AS totale FROM page_errors GROUP BY url ORDER BY totale DESC LIMIT 10",
+            "refId": "C"
+          }
+        ],
+        "gridPos": { "x": 0, "y": 20, "w": 24, "h": 8 }
+      },
+      {
+        "type": "table",
+        "title": "Distribuzione per tipo di errore",
+        "targets": [
+          {
+            "rawSql": "SELECT error_type, COUNT(*) AS totale FROM page_errors GROUP BY error_type ORDER BY totale DESC",
+            "refId": "D"
+          }
+        ],
+        "gridPos": { "x": 0, "y": 29, "w": 24, "h": 8 }
+      }
+    ],
+    "schemaVersion": 38,
+    "version": 1
+  }
+}
