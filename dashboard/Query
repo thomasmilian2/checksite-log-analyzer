@@ -59,3 +59,22 @@ WHERE status_code = 200
   AND $__timeFilter(log_date)
 GROUP BY time
 ORDER BY time;
+
+
+✅ Andamento nel tempo (somma totale errori) ogni ora
+SELECT
+  UNIX_TIMESTAMP(DATE_FORMAT(log_date, '%Y-%m-%d %H:00:00')) * 1000 AS time,
+  COUNT(*) AS total
+FROM page_errors
+WHERE $__timeFilter(log_date)
+GROUP BY time
+ORDER BY time ASC;
+
+✅ Andamento nel tempo (somma totale errori) ogni 5 minuti
+SELECT
+  UNIX_TIMESTAMP(DATE_FORMAT(log_date, '%Y-%m-%d %H:%i:00')) DIV 300 * 300000 AS time,
+  COUNT(*) AS total
+FROM page_errors
+WHERE $__timeFilter(log_date)
+GROUP BY time
+ORDER BY time;
