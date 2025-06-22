@@ -1,9 +1,10 @@
 from config.db_config import DB_CONF
-from parser.status_parser import parse_status_log
+from parser.status_parser import parse_status_log, parse_text_status
 from parser.error_parser import parse_text_errors
 from utils.helpers import extract_hostname_from_path
 import mysql.connector
 import sys
+import os
 
 def insert_status(hostname, status_dict):
     conn = mysql.connector.connect(**DB_CONF)
@@ -40,5 +41,8 @@ if __name__ == "__main__":
         result = parse_status_log(log_path)
         insert_status(hostname, result)
     else:
-        result = parse_text_errors(log_path, hostname)
-        insert_errors(result)
+        status_data = parse_text_status(log_path)
+        insert_status(hostname, status_data)
+
+        error_data = parse_text_errors(log_path, hostname)
+        insert_errors(error_data)

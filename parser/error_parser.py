@@ -1,22 +1,6 @@
 import re
 from datetime import datetime
 
-def parse_text_errors(file_path, hostname):
-    pattern = re.compile(r'\[(.*?)\] ❌ (.*?) - Errore: (.*)')
-    rows = []
-    with open(file_path, 'r') as f:
-        for line in f:
-            match = pattern.search(line)
-            if match:
-                ts_raw, url, error_text = match.groups()
-                try:
-                    log_dt = datetime.fromisoformat(ts_raw)
-                except Exception:
-                    continue
-                error_type = classify_error(error_text)
-                rows.append((hostname, log_dt, url, error_type, error_text.strip()))
-    return rows
-
 def classify_error(error_text):
     if "ERR_PROXY_CONNECTION_FAILED" in error_text:
         return "proxy_failed"
@@ -26,3 +10,19 @@ def classify_error(error_text):
         return "controlport"
     else:
         return "altro"
+
+def parse_text_errors(log_path, hostname):
+    result = []
+
+    with open(log_path, "r", encoding="utf-8") as f:
+        for line in f:
+            match = re.match(r"\[(.*?)\] ❌ (https?://[^\s]+).*?Errore: (.+)", line)
+            if match:
+                timestamp_str, url, error_text = match.groups()
+                try:
+                    timestamp = datetime.fromisoformat(timestamp_str)
+                    error_type = classify_error(error_text.strip())
+                    result.append((hostname, timestamp, url, error_type, error_text.strip()))
+                except ValueError:
+                    continue
+    return result

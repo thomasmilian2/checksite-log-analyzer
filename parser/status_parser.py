@@ -1,17 +1,33 @@
 import json
-from collections import Counter
+from collections import defaultdict
 from datetime import datetime
+import re
 
-def parse_status_log(file_path):
-    status_hourly = {}
-    with open(file_path, 'r') as f:
+def parse_status_log(log_path):
+    result = defaultdict(lambda: defaultdict(int))
+    with open(log_path, "r", encoding="utf-8") as f:
         for line in f:
             try:
                 log = json.loads(line)
-                status = int(log.get("status", 0))
                 timestamp = datetime.fromisoformat(log["timestamp"])
-                hour_key = timestamp.strftime("%Y-%m-%d %H:00:00")
-                status_hourly.setdefault(hour_key, Counter())[status] += 1
-            except Exception:
+                status_code = int(log["status_code"])
+                hour_key = timestamp.replace(minute=0, second=0, microsecond=0)
+                result[hour_key][status_code] += 1
+            except (json.JSONDecodeError, KeyError, ValueError):
                 continue
-    return status_hourly
+    return result
+
+def parse_text_status(log_path):
+    result = defaultdict(lambda: defaultdict(int))
+    with open(log_path, "r", encoding="utf-8") as f:
+        for line in f:
+            match = re.match(r"\[(.*?)\] ✅ (https?://[^\s]+) OK - Status (\d+)", line)
+            if match:
+                timestamp_str, url, status_code = match.groups()
+                try:
+                    timestamp = datetime.fromisoformat(timestamp_str)
+                    hour_key = timestamp.replace(minute=0, second=0, microsecond=0)
+                    result[hour_key][int(status_code)] += 1
+                except ValueError:
+                    continue
+    return result
