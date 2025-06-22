@@ -1,6 +1,13 @@
+-- Crea database
 CREATE DATABASE IF NOT EXISTS checksite_logs;
 USE checksite_logs;
 
+-- Crea utente con permessi
+CREATE USER IF NOT EXISTS 'checksite'@'%' IDENTIFIED BY 'checksitepass';
+GRANT ALL PRIVILEGES ON checksite_logs.* TO 'checksite'@'%';
+FLUSH PRIVILEGES;
+
+-- Crea tabella http_status
 CREATE TABLE IF NOT EXISTS http_status (
     id INT AUTO_INCREMENT PRIMARY KEY,
     hostname VARCHAR(50),
@@ -10,6 +17,7 @@ CREATE TABLE IF NOT EXISTS http_status (
     UNIQUE KEY unique_entry (hostname, log_date, status_code)
 );
 
+-- Crea tabella page_errors
 CREATE TABLE IF NOT EXISTS page_errors (
     id INT AUTO_INCREMENT PRIMARY KEY,
     hostname VARCHAR(50),
