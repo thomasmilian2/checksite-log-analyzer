@@ -1,130 +1,76 @@
-{
-  "dashboard": {
-    "templating": {
-      "list": [
-        {
-          "name": "hostname",
-          "type": "query",
-          "datasource": "MySQL",
-          "refresh": 1,
-          "definition": "SELECT DISTINCT hostname FROM http_status",
-          "query": "SELECT DISTINCT hostname FROM http_status",
-          "multi": true,
-          "includeAll": true,
-          "current": {
-            "text": "All",
-            "value": "$__all"
-          }
-        }
-      ]
-    },
-    "id": null,
-    "uid": "checksite-status",
-    "title": "Checksite - HTTP Status e Errori",
-    "timezone": "browser",
-    "panels": [
-      {
-        "type": "graph",
-        "title": "HTTP 200 nel tempo",
-        "targets": [
+    {
+      "dashboard": {
+        "templating": {
+          "list": [
+            {
+              "name": "hostname",
+              "type": "query",
+              "datasource": "MySQL",
+              "refresh": 1,
+              "definition": "SELECT DISTINCT hostname FROM http_status",
+              "query": "SELECT DISTINCT hostname FROM http_status",
+              "multi": true,
+              "includeAll": true,
+              "current": {
+                "text": "All",
+                "value": "$__all"
+              }
+            }
+          ]
+        },
+        "id": null,
+        "uid": "checksite-status",
+        "title": "Checksite - HTTP Status e Errori",
+        "timezone": "browser",
+        "panels": [
           {
-            "rawSql": "SELECT UNIX_TIMESTAMP(DATE_FORMAT(log_date, '%Y-%m-%d %H:00:00')) * 1000 AS time, COUNT(*) AS total FROM http_status WHERE status_code = 200 AND $__timeFilter(log_date) AND hostname IN($hostname) GROUP BY time ORDER BY time ASC;",
-            "refId": "A",
-            "format": "time_series"
+            "type": "graph",
+            "title": "HTTP 200 nel tempo",
+            "targets": [
+              {
+                "rawSql": "SELECT log_date AS \"time\", SUM(count) AS \"HTTP 200\" FROM http_status WHERE hostname IN($hostname) AND status_code = 200 GROUP BY hostname,  log_date ORDER BY log_date",
+                "refId": "A",
+                "format": "time_series"
+              }
+            ],
+            "gridPos": { "x": 0, "y": 0, "w": 24, "h": 9 }
+          },
+          {
+            "type": "graph",
+            "title": "Errori nel tempo",
+            "targets": [
+              {
+                "rawSql": "SELECT log_date AS \"time\", COUNT(*) AS \"Errori\" FROM page_errors GROUP BY hostname,  log_date ORDER BY log_date",
+                "refId": "B",
+                "format": "time_series"
+              }
+            ],
+            "gridPos": { "x": 0, "y": 10, "w": 24, "h": 9 }
+          },
+          {
+            "type": "table",
+            "title": "Top URL in errore",
+            "targets": [
+              {
+                "rawSql": "SELECT url, COUNT(*) AS totale FROM page_errors GROUP BY hostname,  url ORDER BY totale DESC LIMIT 10",
+                "refId": "C"
+              }
+            ],
+            "gridPos": { "x": 0, "y": 20, "w": 24, "h": 8 }
+          },
+          {
+            "type": "table",
+            "title": "Distribuzione per tipo di errore",
+            "targets": [
+              {
+                "rawSql": "SELECT error_type, COUNT(*) AS totale FROM page_errors GROUP BY hostname,  error_type ORDER BY totale DESC",
+                "refId": "D"
+              }
+            ],
+            "gridPos": { "x": 0, "y": 29, "w": 24, "h": 8 }
           }
         ],
-        "gridPos": {
-          "x": 0,
-          "y": 0,
-          "w": 24,
-          "h": 9
-        }
-      },
-      {
-        "type": "graph",
-        "title": "Errori nel tempo",
-        "targets": [
-          {
-            "rawSql": "SELECT log_date AS time, error_type, COUNT(*) AS total FROM page_errors WHERE $__timeFilter(log_date) AND hostname IN($hostname) GROUP BY log_date, error_type ORDER BY log_date ASC;",
-            "refId": "B",
-            "format": "time_series"
-          }
-        ],
-        "gridPos": {
-          "x": 0,
-          "y": 10,
-          "w": 24,
-          "h": 9
-        }
-      },
-      {
-        "type": "table",
-        "title": "Top URL in errore",
-        "targets": [
-          {
-            "rawSql": "SELECT url, COUNT(*) AS totale FROM page_errors WHERE hostname IN($hostname) GROUP BY url ORDER BY totale DESC LIMIT 10;",
-            "refId": "C"
-          }
-        ],
-        "gridPos": {
-          "x": 0,
-          "y": 20,
-          "w": 24,
-          "h": 8
-        }
-      },
-      {
-        "type": "table",
-        "title": "Distribuzione per tipo di errore",
-        "targets": [
-          {
-            "rawSql": "SELECT error_type, COUNT(*) AS totale FROM page_errors WHERE hostname IN($hostname) GROUP BY error_type ORDER BY totale DESC;",
-            "refId": "D"
-          }
-        ],
-        "gridPos": {
-          "x": 0,
-          "y": 29,
-          "w": 24,
-          "h": 8
-        }
-      },
-      {
-        "type": "graph",
-        "title": "Errori 408 (Timeout) nel tempo",
-        "targets": [
-          {
-            "rawSql": "SELECT UNIX_TIMESTAMP(DATE_FORMAT(log_date, '%Y-%m-%d %H:00:00')) * 1000 AS time, SUM(count) AS total FROM http_status WHERE status_code = 408 AND $__timeFilter(log_date) AND hostname IN($hostname) GROUP BY time ORDER BY time ASC;",
-            "refId": "E",
-            "format": "time_series"
-          }
-        ],
-        "gridPos": {
-          "x": 0,
-          "y": 38,
-          "w": 24,
-          "h": 9
-        }
-      },
-      {
-        "type": "graph",
-        "title": "Tutti gli status HTTP tranne 200",
-        "targets": [
-          {
-            "rawSql": "SELECT log_date AS time, status_code, SUM(count) AS total FROM http_status WHERE status_code != 200 AND $__timeFilter(log_date) AND hostname IN($hostname) GROUP BY log_date, status_code ORDER BY log_date ASC;",
-            "refId": "F",
-            "format": "time_series"
-          }
-        ],
-        "gridPos": {
-          "x": 0,
-          "y": 48,
-          "w": 24,
-          "h": 9
-        }
+        "schemaVersion": 38,
+        "version": 1
       }
-    ],
-    "schemaVersion": 38,
-    "version": 2
-  }
-}
+    }
